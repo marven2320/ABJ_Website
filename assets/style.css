@@ -438,6 +438,20 @@ img{ max-width: 100%; display: block; }
   background: var(--red);
 }
 
+/* Honeypot: off-screen for bots to find, never shown to people.
+   display:none is avoided because some bots skip hidden inputs. */
+.hp-field{
+  position: absolute;
+  left: -9999px;
+  width: 1px; height: 1px;
+  overflow: hidden;
+}
+
+#captcha-slot:not(:empty){ margin: 16px 0; }
+
+#contact-status.status-error{ color: var(--red); }
+#contact-status.status-ok{ color: #1f7a4d; }
+
 .service-note{
   display: inline-block;
   margin: 2px 0 8px;

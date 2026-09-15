@@ -21,6 +21,26 @@
     "other": "Other"
   };
 
+  /* ---------------- Contact form delivery ----------------
+     Submissions POST to a hosted form service, which filters spam and
+     forwards the message by email. Two keys are needed:
+
+       FORM_ACCESS_KEY    from web3forms.com - enter the destination
+                          address and the key is emailed to you.
+       HCAPTCHA_SITE_KEY  from hcaptcha.com - the site key for this domain.
+
+     While FORM_ACCESS_KEY is empty the form falls back to opening the
+     visitor's email app, exactly as it behaved before, so the site keeps
+     working until the keys are in place. The CAPTCHA only appears once
+     HCAPTCHA_SITE_KEY is set, because it is verified server-side by the
+     form service and is pointless without a backend to verify it.
+     -------------------------------------------------------- */
+
+  var FORM_ACCESS_KEY = "";
+  var HCAPTCHA_SITE_KEY = "";
+  var FORM_ENDPOINT = "https://api.web3forms.com/submit";
+  var CONTACT_EMAIL = "info@abj-enggworks.com";
+
   /* ---------------- View routing (Home / Services / About / Contact / FAQ) ---------------- */
 
   var views = ["home", "services", "about", "contact", "faq"];
@@ -106,37 +126,147 @@
     });
   }
 
-  /* ---------------- Contact form -> email composer ---------------- */
+  /* ---------------- Contact form ---------------- */
+
+  function setStatus(text, kind) {
+    var status = document.getElementById("contact-status");
+    if (!status) return;
+    status.textContent = text;
+    status.classList.add("show");
+    status.classList.remove("status-error", "status-ok");
+    if (kind) status.classList.add(kind);
+  }
+
+  function readForm() {
+    return {
+      name: document.getElementById("name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      subjectSlug: document.getElementById("subject").value,
+      message: document.getElementById("message").value.trim()
+    };
+  }
+
+  function validate(data) {
+    if (!data.name) return "Please enter your name.";
+    if (!data.email || data.email.indexOf("@") < 1) return "Please enter a valid email address.";
+    if (!data.message) return "Please tell us a little about what you need.";
+    return null;
+  }
+
+  // Fallback used while no form service is configured: hand the message
+  // to the visitor's own email app, the original behaviour.
+  function sendByMailto(data, subjectText) {
+    var body =
+      "Name: " + data.name + "\n" +
+      "Email: " + data.email + "\n" +
+      "Phone: " + (data.phone || "-") + "\n\n" +
+      data.message;
+    setStatus("Opening your email app to send this to " + CONTACT_EMAIL + " \u2026");
+    window.location.href =
+      "mailto:" + CONTACT_EMAIL +
+      "?subject=" + encodeURIComponent(subjectText) +
+      "&body=" + encodeURIComponent(body);
+  }
+
+  function initHcaptcha() {
+    var slot = document.getElementById("captcha-slot");
+    if (!slot || !HCAPTCHA_SITE_KEY) return;
+
+    var box = document.createElement("div");
+    box.className = "h-captcha";
+    box.setAttribute("data-captcha", "true");
+    box.setAttribute("data-sitekey", HCAPTCHA_SITE_KEY);
+    slot.appendChild(box);
+
+    var tag = document.createElement("script");
+    tag.src = "https://js.hcaptcha.com/1/api.js";
+    tag.async = true;
+    tag.defer = true;
+    document.head.appendChild(tag);
+  }
 
   function initContactForm() {
     var form = document.getElementById("contact-form");
     if (!form) return;
+
+    initHcaptcha();
+    var loadedAt = Date.now();
+
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var name = document.getElementById("name").value.trim();
-      var email = document.getElementById("email").value.trim();
-      var phone = document.getElementById("phone").value.trim();
-      var subjectSlug = document.getElementById("subject").value;
-      var message = document.getElementById("message").value.trim();
 
-      var subjectText = SUBJECT_LABELS[subjectSlug] || "General Inquiry";
-      var body =
-        "Name: " + name + "\n" +
-        "Email: " + email + "\n" +
-        "Phone: " + (phone || "-") + "\n\n" +
-        message;
+      // Honeypot: a real person never sees this field, so anything in it
+      // is a bot filling every input on the page.
+      var trap = document.getElementById("company-website");
+      if (trap && trap.value) return;
 
-      var mailto =
-        "mailto:info@abj-enggworks.com" +
-        "?subject=" + encodeURIComponent(subjectText) +
-        "&body=" + encodeURIComponent(body);
-
-      var status = document.getElementById("contact-status");
-      if (status) {
-        status.textContent = "Opening your email app to send this to info@abj-enggworks.com \u2026";
-        status.classList.add("show");
+      // Anything submitted within a couple of seconds of load was not typed.
+      if (Date.now() - loadedAt < 2000) {
+        setStatus("Please take a moment to fill in the form.", "status-error");
+        return;
       }
-      window.location.href = mailto;
+
+      var data = readForm();
+      var problem = validate(data);
+      if (problem) {
+        setStatus(problem, "status-error");
+        return;
+      }
+
+      var subjectText = SUBJECT_LABELS[data.subjectSlug] || "General Inquiry";
+
+      if (!FORM_ACCESS_KEY) {
+        sendByMailto(data, subjectText);
+        return;
+      }
+
+      var captchaToken = "";
+      if (HCAPTCHA_SITE_KEY) {
+        var field = form.querySelector('[name="h-captcha-response"]');
+        captchaToken = field ? field.value : "";
+        if (!captchaToken) {
+          setStatus("Please complete the anti-spam check below before sending.", "status-error");
+          return;
+        }
+      }
+
+      var button = form.querySelector('button[type="submit"]');
+      if (button) button.disabled = true;
+      setStatus("Sending your message \u2026");
+
+      var payload = {
+        access_key: FORM_ACCESS_KEY,
+        subject: subjectText,
+        from_name: "AB&J Engineering Works website",
+        name: data.name,
+        email: data.email,
+        phone: data.phone || "-",
+        message: data.message
+      };
+      if (captchaToken) payload["h-captcha-response"] = captchaToken;
+
+      fetch(FORM_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (result) {
+          if (result && result.success) {
+            form.reset();
+            if (window.hcaptcha) window.hcaptcha.reset();
+            setStatus("Thank you. Your message has been sent \u2014 we will get back to you shortly.", "status-ok");
+          } else {
+            setStatus("Sorry, that did not go through. Please email us directly at " + CONTACT_EMAIL + ".", "status-error");
+          }
+        })
+        .catch(function () {
+          setStatus("Sorry, that did not go through. Please email us directly at " + CONTACT_EMAIL + ".", "status-error");
+        })
+        .then(function () {
+          if (button) button.disabled = false;
+        });
     });
   }
 
