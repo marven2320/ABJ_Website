@@ -29,15 +29,22 @@
                           address and the key is emailed to you.
        HCAPTCHA_SITE_KEY  from hcaptcha.com - the site key for this domain.
 
-     While FORM_ACCESS_KEY is empty the form falls back to opening the
-     visitor's email app, exactly as it behaved before, so the site keeps
-     working until the keys are in place. The CAPTCHA only appears once
-     HCAPTCHA_SITE_KEY is set, because it is verified server-side by the
-     form service and is pointless without a backend to verify it.
+     Replace the PASTE_... placeholders below with the real values.
+     Until they are replaced the form falls back to opening the visitor's
+     email app, exactly as it behaved before, so the site keeps working.
+     The CAPTCHA only appears once a real site key is in place, because it
+     is verified server-side by the form service and is pointless without
+     a backend to verify it.
      -------------------------------------------------------- */
 
-  var FORM_ACCESS_KEY = "";
-  var HCAPTCHA_SITE_KEY = "";
+  var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
+  var HCAPTCHA_SITE_KEY = "PASTE_HCAPTCHA_SITE_KEY_HERE";
+
+  // A placeholder is still a truthy string, so check for it explicitly -
+  // otherwise the form would POST an invalid key instead of falling back.
+  function isConfigured(value) {
+    return !!value && value.indexOf("PASTE_") !== 0;
+  }
   var FORM_ENDPOINT = "https://api.web3forms.com/submit";
   var CONTACT_EMAIL = "info@abj-enggworks.com";
 
@@ -171,7 +178,7 @@
 
   function initHcaptcha() {
     var slot = document.getElementById("captcha-slot");
-    if (!slot || !HCAPTCHA_SITE_KEY) return;
+    if (!slot || !isConfigured(HCAPTCHA_SITE_KEY)) return;
 
     var box = document.createElement("div");
     box.className = "h-captcha";
@@ -216,13 +223,13 @@
 
       var subjectText = SUBJECT_LABELS[data.subjectSlug] || "General Inquiry";
 
-      if (!FORM_ACCESS_KEY) {
+      if (!isConfigured(FORM_ACCESS_KEY)) {
         sendByMailto(data, subjectText);
         return;
       }
 
       var captchaToken = "";
-      if (HCAPTCHA_SITE_KEY) {
+      if (isConfigured(HCAPTCHA_SITE_KEY)) {
         var field = form.querySelector('[name="h-captcha-response"]');
         captchaToken = field ? field.value : "";
         if (!captchaToken) {
