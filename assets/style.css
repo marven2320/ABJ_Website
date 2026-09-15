@@ -438,6 +438,17 @@ img{ max-width: 100%; display: block; }
   background: var(--red);
 }
 
+.service-note{
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--red);
+  border: 1px solid var(--red);
+  padding: 3px 10px;
+}
+
 .service-actions{ display: flex; align-items: center; }
 
 @media (max-width: 760px){
