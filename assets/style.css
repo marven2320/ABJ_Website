@@ -163,14 +163,6 @@ img{ max-width: 100%; display: block; }
   line-height: 1.2;
   color: var(--navy);
 }
-.brand-name span{
-  display: block;
-  font-family: var(--font-body);
-  font-weight: 500;
-  font-size: 0.68rem;
-  color: var(--red);
-  letter-spacing: 0.04em;
-}
 
 .main-nav ul{
   display: flex;
