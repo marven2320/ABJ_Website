@@ -15,7 +15,7 @@
     "smart-farming": "RFQ: SMART Farming (Hydroponics)",
     "metal-susceptibility": "RFQ: Metal Susceptibility Apparatus",
     "stirrer": "RFQ: Chemical and Magnetic Stirrer",
-    "glove-box": "RFQ: Laboratory Scale Glove Box",
+    "glove-box": "RFQ: Laboratory Scale Glove Box for Wet Laboratories",
     "uav-power": "RFQ: Transformerless Power Supply for Tethered UAV Applications",
     "pv-estimate": "RFQ: PV Estimate and Installation",
     "other": "Other"
