@@ -186,8 +186,101 @@
     runCalculator();
   }
 
+  /* ---------------- Hero project showcase ---------------- */
+
+  function initShowcase() {
+    var frame = document.getElementById("showcase");
+    if (!frame) return;
+
+    var slides = Array.prototype.slice.call(frame.querySelectorAll(".slide"));
+    var dotsWrap = document.getElementById("showcase-dots");
+    var prevBtn = document.getElementById("showcase-prev");
+    var nextBtn = document.getElementById("showcase-next");
+    if (slides.length < 2) return;
+
+    var index = 0;
+    var timer = null;
+    var INTERVAL = 6000;
+    var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Build the dot controls from the slides themselves
+    var dots = slides.map(function (slide, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-label", "Project " + (i + 1));
+      b.setAttribute("aria-selected", i === 0 ? "true" : "false");
+      b.addEventListener("click", function () {
+        go(i);
+        restart();
+      });
+      dotsWrap.appendChild(b);
+      return b;
+    });
+
+    function go(next) {
+      index = (next + slides.length) % slides.length;
+      slides.forEach(function (s, i) {
+        s.classList.toggle("active", i === index);
+      });
+      dots.forEach(function (d, i) {
+        d.setAttribute("aria-selected", i === index ? "true" : "false");
+      });
+    }
+
+    function advance() { go(index + 1); }
+
+    function start() {
+      if (reduceMotion) return; // respect the user's motion preference
+      stop();
+      timer = setInterval(advance, INTERVAL);
+    }
+    function stop() {
+      if (timer) { clearInterval(timer); timer = null; }
+    }
+    function restart() { stop(); start(); }
+
+    prevBtn.addEventListener("click", function () { go(index - 1); restart(); });
+    nextBtn.addEventListener("click", function () { advance(); restart(); });
+
+    // Pause while the visitor is looking at or interacting with the frame
+    frame.addEventListener("mouseenter", stop);
+    frame.addEventListener("mouseleave", start);
+    frame.addEventListener("focusin", stop);
+    frame.addEventListener("focusout", start);
+
+    // Stop animating when the tab is in the background
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) { stop(); } else { start(); }
+    });
+
+    // Arrow-key navigation
+    frame.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { go(index - 1); restart(); }
+      if (e.key === "ArrowRight") { advance(); restart(); }
+    });
+
+    // Swipe on touch devices
+    var touchX = null;
+    frame.addEventListener("touchstart", function (e) {
+      touchX = e.changedTouches[0].clientX;
+      stop();
+    }, { passive: true });
+    frame.addEventListener("touchend", function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 45) { dx < 0 ? advance() : go(index - 1); }
+      touchX = null;
+      start();
+    }, { passive: true });
+
+    go(0);
+    start();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initRouting();
+    initShowcase();
     initNavToggle();
     initQuoteButtons();
     initContactForm();
