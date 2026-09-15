@@ -10,6 +10,7 @@
     "plc-scada": "RFQ: PLC Design, Programming, and Implementation",
     "monitoring": "RFQ: Real-time Data Monitoring and Management System (SCADA)",
     "load-planning": "RFQ: Load Planning, Forecasting and Optimization",
+    "efficool": "RFQ: EffiCool Aircon Energy Management System",
     "smart-systems": "RFQ: SMART Systems and Home Automation",
     "smart-farming": "RFQ: SMART Farming (Hydroponics)",
     "metal-susceptibility": "RFQ: Metal Susceptibility Apparatus",
