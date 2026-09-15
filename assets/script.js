@@ -140,11 +140,19 @@
 
   /* ---------------- PV Estimate & Installation calculator ---------------- */
 
+  // Turnkey rates in PHP per kWp. `low`/`high` are the pre-adjustment
+  // baseline: equipment, balance of system, and labor bundled together.
+  // `laborShare` is the portion of that baseline attributable to labor,
+  // which is what LABOR_INFLATION_MULTIPLIER is applied to below.
   var INSTALL_TYPES = {
-    "residential": { label: "Residential grid-tied", low: 55000, high: 65000 },
-    "commercial": { label: "Commercial grid-tied", low: 45000, high: 58000 },
-    "hybrid": { label: "Hybrid, grid-tied with battery backup", low: 85000, high: 110000 }
+    "residential": { label: "Residential grid-tied", low: 55000, high: 65000, laborShare: 0.20 },
+    "commercial": { label: "Commercial grid-tied", low: 45000, high: 58000, laborShare: 0.15 },
+    "hybrid": { label: "Hybrid, grid-tied with battery backup", low: 85000, high: 110000, laborShare: 0.18 }
   };
+
+  // Labor is uplifted against the baseline rates to reflect current wage
+  // and mobilization costs. Equipment is left at baseline.
+  var LABOR_INFLATION_MULTIPLIER = 1.3;
 
   var PANEL_WATTS = { "450": 450, "550": 550, "585": 585 };
 
@@ -166,13 +174,25 @@
     var roofArea = Math.round(kwp * 6); // ~6 sqm per kWp, indicative
     var dailyYieldLow = (kwp * 3.8 * 0.8).toFixed(1);
     var dailyYieldHigh = (kwp * 4.6 * 0.8).toFixed(1);
-    var costLow = kwp * installType.low;
-    var costHigh = kwp * installType.high;
+    // Split the baseline turnkey rate into equipment and labor, uplift the
+    // labor portion only, then recombine.
+    var laborShare = installType.laborShare;
+    var equipLow = kwp * installType.low * (1 - laborShare);
+    var equipHigh = kwp * installType.high * (1 - laborShare);
+    var laborLow = kwp * installType.low * laborShare * LABOR_INFLATION_MULTIPLIER;
+    var laborHigh = kwp * installType.high * laborShare * LABOR_INFLATION_MULTIPLIER;
+    var costLow = equipLow + laborLow;
+    var costHigh = equipHigh + laborHigh;
 
     document.getElementById("out-panels").textContent = panelCount + " panels (" + panelWatts + "Wp each)";
     document.getElementById("out-area").textContent = "\u2248 " + roofArea + " m\u00b2";
     document.getElementById("out-yield").textContent = dailyYieldLow + "\u2013" + dailyYieldHigh + " kWh / day";
     document.getElementById("out-cost").textContent = formatPeso(costLow) + " \u2013 " + formatPeso(costHigh);
+
+    var laborOut = document.getElementById("out-labor");
+    if (laborOut) {
+      laborOut.textContent = formatPeso(laborLow) + " \u2013 " + formatPeso(laborHigh);
+    }
     document.getElementById("out-type").textContent = installType.label;
   }
 
