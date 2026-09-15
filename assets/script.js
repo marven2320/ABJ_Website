@@ -1,0 +1,196 @@
+/* =========================================================
+   AB&J Engineering Works — site behaviour
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  var SUBJECT_LABELS = {
+    "general": "General Inquiry",
+    "plc-scada": "RFQ: PLC Design, Programming, and Implementation",
+    "monitoring": "RFQ: Real-time Data Monitoring and Management System (SCADA)",
+    "load-planning": "RFQ: Load Planning, Forecasting and Optimization",
+    "smart-systems": "RFQ: SMART Systems and Home Automation",
+    "smart-farming": "RFQ: SMART Farming (Hydroponics)",
+    "metal-susceptibility": "RFQ: Metal Susceptibility Apparatus",
+    "stirrer": "RFQ: Chemical and Magnetic Stirrer",
+    "uav-power": "RFQ: Transformerless Power Supply for Tethered UAV Applications",
+    "pv-estimate": "RFQ: PV Estimate and Installation",
+    "other": "Other"
+  };
+
+  /* ---------------- View routing (Home / Services / About / Contact / FAQ) ---------------- */
+
+  var views = ["home", "services", "about", "contact", "faq"];
+
+  function showView(id) {
+    if (views.indexOf(id) === -1) id = "home";
+    views.forEach(function (v) {
+      var el = document.getElementById("view-" + v);
+      if (el) el.classList.toggle("active", v === id);
+    });
+    document.querySelectorAll(".main-nav a[data-view]").forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("data-view") === id);
+    });
+    var nav = document.querySelector(".main-nav");
+    if (nav) nav.classList.remove("open");
+    var toggle = document.querySelector(".nav-toggle");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function currentHashView() {
+    var h = (window.location.hash || "").replace("#", "");
+    return views.indexOf(h) !== -1 ? h : "home";
+  }
+
+  function initRouting() {
+    if (!document.getElementById("view-home")) return; // not on index.html
+
+    window.addEventListener("hashchange", function () {
+      showView(currentHashView());
+    });
+
+    var params = new URLSearchParams(window.location.search);
+    var subject = params.get("subject");
+
+    if (subject && SUBJECT_LABELS[subject]) {
+      setSubject(subject);
+      showView("contact");
+      // drop the ?subject= query string from the address bar without adding a history entry
+      history.replaceState(null, "", window.location.pathname + "#contact");
+    } else {
+      showView(currentHashView());
+    }
+  }
+
+  /* ---------------- Mobile nav toggle ---------------- */
+
+  function initNavToggle() {
+    var toggle = document.querySelector(".nav-toggle");
+    var nav = document.querySelector(".main-nav");
+    if (!toggle || !nav) return;
+    toggle.addEventListener("click", function () {
+      var isOpen = nav.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    });
+  }
+
+  /* ---------------- Request-a-Quotation prefill ---------------- */
+
+  function setSubject(slug) {
+    var select = document.getElementById("subject");
+    if (select && SUBJECT_LABELS[slug]) {
+      select.value = slug;
+    }
+  }
+
+  function initQuoteButtons() {
+    document.querySelectorAll("[data-quote]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        var slug = btn.getAttribute("data-quote");
+        if (document.getElementById("view-home")) {
+          // already on the main site: no reload, just switch views
+          e.preventDefault();
+          setSubject(slug);
+          window.location.hash = "contact";
+          showView("contact");
+          var nameField = document.getElementById("name");
+          if (nameField) nameField.focus();
+        }
+        // otherwise (e.g. on pv-estimate.html) let the normal href navigate,
+        // it already points to index.html?subject=...#contact
+      });
+    });
+  }
+
+  /* ---------------- Contact form -> email composer ---------------- */
+
+  function initContactForm() {
+    var form = document.getElementById("contact-form");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var name = document.getElementById("name").value.trim();
+      var email = document.getElementById("email").value.trim();
+      var phone = document.getElementById("phone").value.trim();
+      var subjectSlug = document.getElementById("subject").value;
+      var message = document.getElementById("message").value.trim();
+
+      var subjectText = SUBJECT_LABELS[subjectSlug] || "General Inquiry";
+      var body =
+        "Name: " + name + "\n" +
+        "Email: " + email + "\n" +
+        "Phone: " + (phone || "-") + "\n\n" +
+        message;
+
+      var mailto =
+        "mailto:info@abj-enggworks.com" +
+        "?subject=" + encodeURIComponent(subjectText) +
+        "&body=" + encodeURIComponent(body);
+
+      var status = document.getElementById("contact-status");
+      if (status) {
+        status.textContent = "Opening your email app to send this to info@abj-enggworks.com \u2026";
+        status.classList.add("show");
+      }
+      window.location.href = mailto;
+    });
+  }
+
+  /* ---------------- PV Estimate & Installation calculator ---------------- */
+
+  var INSTALL_TYPES = {
+    "residential": { label: "Residential grid-tied", low: 55000, high: 65000 },
+    "commercial": { label: "Commercial grid-tied", low: 45000, high: 58000 },
+    "hybrid": { label: "Hybrid, grid-tied with battery backup", low: 85000, high: 110000 }
+  };
+
+  var PANEL_WATTS = { "450": 450, "550": 550, "585": 585 };
+
+  function formatPeso(n) {
+    return "\u20b1" + Math.round(n).toLocaleString("en-PH");
+  }
+
+  function runCalculator() {
+    var range = document.getElementById("kwp-range");
+    if (!range) return;
+
+    var kwp = parseFloat(range.value);
+    var panelWatts = PANEL_WATTS[document.getElementById("panel-watts").value] || 585;
+    var installType = INSTALL_TYPES[document.getElementById("install-type").value] || INSTALL_TYPES.residential;
+
+    document.getElementById("kwp-value").textContent = kwp.toFixed(1) + " kWp";
+
+    var panelCount = Math.ceil((kwp * 1000) / panelWatts);
+    var roofArea = Math.round(kwp * 6); // ~6 sqm per kWp, indicative
+    var dailyYieldLow = (kwp * 3.8 * 0.8).toFixed(1);
+    var dailyYieldHigh = (kwp * 4.6 * 0.8).toFixed(1);
+    var costLow = kwp * installType.low;
+    var costHigh = kwp * installType.high;
+
+    document.getElementById("out-panels").textContent = panelCount + " panels (" + panelWatts + "Wp each)";
+    document.getElementById("out-area").textContent = "\u2248 " + roofArea + " m\u00b2";
+    document.getElementById("out-yield").textContent = dailyYieldLow + "\u2013" + dailyYieldHigh + " kWh / day";
+    document.getElementById("out-cost").textContent = formatPeso(costLow) + " \u2013 " + formatPeso(costHigh);
+    document.getElementById("out-type").textContent = installType.label;
+  }
+
+  function initCalculator() {
+    var range = document.getElementById("kwp-range");
+    if (!range) return;
+    ["kwp-range", "panel-watts", "install-type"].forEach(function (id) {
+      document.getElementById(id).addEventListener("input", runCalculator);
+      document.getElementById(id).addEventListener("change", runCalculator);
+    });
+    runCalculator();
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initRouting();
+    initNavToggle();
+    initQuoteButtons();
+    initContactForm();
+    initCalculator();
+  });
+})();

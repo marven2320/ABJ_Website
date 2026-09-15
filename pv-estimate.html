@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PV Estimate and Installation &mdash; AB&amp;J Engineering Works</title>
+<meta name="description" content="Indicative solar PV sizing, cost, and energy yield estimate from AB&J Engineering Works, plus the standard installation process and warranty coverage.">
+<link rel="icon" href="assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand" aria-label="AB&J Engineering Works, home">
+      <img src="assets/logo.png" alt="AB&J Engineering Works logo">
+      <span class="brand-name">AB&amp;J ENGINEERING<span>WORKS</span></span>
+    </a>
+    <nav aria-label="Primary">
+      <a href="index.html#contact" class="btn btn-outline">Contact Us</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <div class="pv-hero">
+    <div class="container">
+      <a href="index.html#services" class="pv-back">&larr; Back to Products &amp; Services</a>
+      <h1>PV Estimate and Installation</h1>
+      <p class="lead">Use the calculator below for an indicative solar system size, cost range, and expected energy yield. It's a planning starting point &mdash; every quotation is finalized after an on-site assessment.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Estimate your system</h2>
+        <p>Adjust the system size and installation type to see indicative figures for a Mindanao-based installation.</p>
+      </div>
+
+      <div class="calc-panel">
+        <div class="calc-inputs">
+          <label for="kwp-range">System size</label>
+          <div class="calc-value" id="kwp-value">5.0 kWp</div>
+          <input type="range" id="kwp-range" min="1" max="20" step="0.5" value="5">
+
+          <div class="calc-select">
+            <label for="install-type">Installation type</label>
+            <select id="install-type">
+              <option value="residential">Residential, grid-tied</option>
+              <option value="commercial">Commercial, grid-tied</option>
+              <option value="hybrid">Hybrid, grid-tied with battery backup</option>
+            </select>
+          </div>
+
+          <div class="calc-select">
+            <label for="panel-watts">Panel wattage</label>
+            <select id="panel-watts">
+              <option value="450">450 Wp</option>
+              <option value="550">550 Wp</option>
+              <option value="585" selected>585 Wp</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="calc-outputs">
+          <div class="calc-out-row"><span class="k">Installation type</span><span class="v" id="out-type">&mdash;</span></div>
+          <div class="calc-out-row"><span class="k">Estimated panel count</span><span class="v" id="out-panels">&mdash;</span></div>
+          <div class="calc-out-row"><span class="k">Approx. roof area needed</span><span class="v" id="out-area">&mdash;</span></div>
+          <div class="calc-out-row"><span class="k">Estimated daily energy yield</span><span class="v" id="out-yield">&mdash;</span></div>
+          <div class="calc-out-row"><span class="k">Budgetary cost range</span><span class="v" id="out-cost">&mdash;</span></div>
+          <p class="calc-disclaimer">Indicative planning estimate only, based on typical Mindanao solar irradiance (3.8&ndash;4.6 peak sun hours/day) and standard turnkey pricing ranges. Actual system design, cost, and generation depend on roof condition, shading, electrical setup, and site assessment findings.</p>
+          <div style="margin-top:20px;">
+            <a href="index.html?subject=pv-estimate#contact" class="btn btn-primary btn-block">Request a formal quotation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <h2>Standard reference sizes</h2>
+        <p>Typical residential and commercial system sizes and what they generally cover.</p>
+      </div>
+      <div class="spec-table-wrap">
+        <table class="spec-table">
+          <thead>
+            <tr>
+              <th>System size</th>
+              <th>Typical use case</th>
+              <th>Approx. panel count*</th>
+              <th>Approx. roof area*</th>
+              <th>Indicative daily yield*</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>3 kWp</td>
+              <td>Small household, base load offset</td>
+              <td>5&ndash;7 panels</td>
+              <td>18 m&sup2;</td>
+              <td>9&ndash;11 kWh/day</td>
+            </tr>
+            <tr>
+              <td>5 kWp</td>
+              <td>Typical household</td>
+              <td>9&ndash;12 panels</td>
+              <td>30 m&sup2;</td>
+              <td>15&ndash;18 kWh/day</td>
+            </tr>
+            <tr>
+              <td>8 kWp</td>
+              <td>Larger household or small business</td>
+              <td>14&ndash;18 panels</td>
+              <td>48 m&sup2;</td>
+              <td>24&ndash;29 kWh/day</td>
+            </tr>
+            <tr>
+              <td>10 kWp</td>
+              <td>Small commercial</td>
+              <td>18&ndash;23 panels</td>
+              <td>60 m&sup2;</td>
+              <td>30&ndash;37 kWh/day</td>
+            </tr>
+            <tr>
+              <td>20 kWp+</td>
+              <td>Commercial &amp; industrial</td>
+              <td>Sized per load study</td>
+              <td>Sized per load study</td>
+              <td>Sized per load study</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="calc-disclaimer">*Figures are standard planning estimates using 550&ndash;585 Wp panels and typical Mindanao irradiance. They are for reference only and are refined during the site assessment.</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Our installation process</h2>
+        <p>A consistent sequence from first assessment to a commissioned, warrantied system.</p>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <span class="num">1</span>
+          <h4>Site assessment &amp; load study</h4>
+          <p>We review roof or ground space, shading, structural condition, and your electrical load profile.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">2</span>
+          <h4>System design &amp; sizing</h4>
+          <p>We size panels, inverter, and (if applicable) battery capacity to match your load and site conditions.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">3</span>
+          <h4>Proposal &amp; quotation</h4>
+          <p>A formal quotation with equipment specification, cost, and project timeline for your approval.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">4</span>
+          <h4>Permitting support</h4>
+          <p>Assistance with utility coordination and net-metering documentation for grid-tied systems.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">5</span>
+          <h4>Installation</h4>
+          <p>Mounting, wiring, and integration carried out by our engineering team on-site.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">6</span>
+          <h4>Testing &amp; commissioning</h4>
+          <p>Full system testing and performance verification before energizing and handover.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">7</span>
+          <h4>Handover &amp; training</h4>
+          <p>A walkthrough of your system and monitoring tools so you know how it performs day to day.</p>
+        </div>
+        <div class="process-step">
+          <span class="num">8</span>
+          <h4>Warranty &amp; maintenance</h4>
+          <p>Ongoing support and maintenance options for the life of your system.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <h2>Standard warranty coverage</h2>
+        <p>Typical terms for a grid-tied installation; exact coverage is confirmed in your quotation based on the equipment specified.</p>
+      </div>
+      <div class="warranty-grid">
+        <div class="warranty-card">
+          <div class="years">25 yrs</div>
+          <p>Solar panel performance warranty (manufacturer), covering output degradation over the panel's lifetime.</p>
+        </div>
+        <div class="warranty-card">
+          <div class="years">5&ndash;10 yrs</div>
+          <p>Inverter warranty (manufacturer), varying by brand and model specified for your system.</p>
+        </div>
+        <div class="warranty-card">
+          <div class="years">2 yrs</div>
+          <p>AB&amp;J workmanship warranty, covering installation quality and system integration.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section section-dark">
+    <div class="container" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:24px;">
+      <div style="max-width:520px;">
+        <h2>Ready for a site-specific quotation?</h2>
+        <p>Share your location and load requirements and we'll follow up with a formal proposal.</p>
+      </div>
+      <a href="index.html?subject=pv-estimate#contact" class="btn btn-primary">Request a Quotation</a>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="brand-name">AB&amp;J ENGINEERING WORKS</span>
+        <p>Electrical and power systems engineering, IoT products, and solar PV solutions based in Iligan City, Mindanao, Philippines.</p>
+      </div>
+      <div>
+        <h4>Site</h4>
+        <ul>
+          <li><a href="index.html#home">Home</a></li>
+          <li><a href="index.html#services">Products &amp; Services</a></li>
+          <li><a href="index.html#about">About Us</a></li>
+          <li><a href="index.html#contact">Contact Us</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="tel:+639274988147">0927 498 8147</a></li>
+          <li><a href="tel:+63632293727">(063) 229-3727</a></li>
+          <li><a href="mailto:info@abj-enggworks.com">info@abj-enggworks.com</a></li>
+          <li>Tulip St., Brgy. Tubod, Iligan City</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 AB&amp;J Engineering Works. All rights reserved.</span>
+      <span>Iligan City, Mindanao, Philippines</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/script.js"></script>
+</body>
+</html>
