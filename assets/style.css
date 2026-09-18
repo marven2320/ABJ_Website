@@ -848,6 +848,10 @@ img{ max-width: 100%; display: block; }
   padding: 24px;
 }
 
+/* display:flex above would otherwise beat the browser's [hidden] rule,
+   leaving the dialog on screen permanently. */
+.modal[hidden]{ display: none; }
+
 .modal-backdrop{
   position: absolute;
   inset: 0;
