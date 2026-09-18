@@ -389,7 +389,7 @@
 
     var index = 0;
     var timer = null;
-    var INTERVAL = 6000;
+    var INTERVAL = 3000;
     var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // Build the dot controls from the slides themselves
