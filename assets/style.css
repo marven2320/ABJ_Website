@@ -523,24 +523,8 @@ img{ max-width: 100%; display: block; }
 }
 
 /* ---------------------------------------------------------
-   Trust / projects band
+   Projects band
    --------------------------------------------------------- */
-.client-row{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 44px;
-}
-.client-chip{
-  border: 1px solid #dfe3ea;
-  background: var(--white);
-  padding: 10px 18px;
-  font-family: var(--font-head);
-  font-weight: 600;
-  font-size: 0.92rem;
-  color: var(--navy);
-}
-
 .project-grid{
   display: grid;
   grid-template-columns: repeat(2, 1fr);
