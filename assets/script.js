@@ -23,22 +23,25 @@
 
   /* ---------------- Contact form delivery ----------------
      Submissions POST to a hosted form service, which filters spam and
-     forwards the message by email. Two keys are needed:
+     forwards the message by email, verifying the reCAPTCHA token as part
+     of that step.
 
-       FORM_ACCESS_KEY    from web3forms.com - enter the destination
-                          address and the key is emailed to you.
-       HCAPTCHA_SITE_KEY  from hcaptcha.com - the site key for this domain.
+     RECAPTCHA_SITE_KEY below is the public half of the key pair; it is
+     meant to be readable in page source and is safe to keep here.
 
-     Replace the PASTE_... placeholders below with the real values.
-     Until they are replaced the form falls back to opening the visitor's
-     email app, exactly as it behaved before, so the site keeps working.
-     The CAPTCHA only appears once a real site key is in place, because it
-     is verified server-side by the form service and is pointless without
-     a backend to verify it.
+     The reCAPTCHA SECRET key must never appear in this file or anywhere
+     else in this repository - everything here is served to visitors. It
+     belongs in the Web3Forms dashboard, which is what performs the
+     server-side verification against Google.
+
+     FORM_ACCESS_KEY comes from web3forms.com: enter the destination
+     address there and the key is emailed to you. Until it is filled in,
+     the form falls back to opening the visitor's email app exactly as it
+     behaved before, so the site keeps working.
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
-  var HCAPTCHA_SITE_KEY = "PASTE_HCAPTCHA_SITE_KEY_HERE";
+  var RECAPTCHA_SITE_KEY = "6LdplMEtAAAAAEidoEai9SEop7wdP6qNPoF6S3uk";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
@@ -46,7 +49,7 @@
     return !!value && value.indexOf("PASTE_") !== 0;
   }
   var FORM_ENDPOINT = "https://api.web3forms.com/submit";
-  var CONTACT_EMAIL = "info@abj-enggworks.com";
+  var CONTACT_EMAIL = "abnjworks@gmail.com";
 
   /* ---------------- View routing (Home / Services / About / Contact / FAQ) ---------------- */
 
@@ -176,28 +179,37 @@
       "&body=" + encodeURIComponent(body);
   }
 
-  function initHcaptcha() {
-    var slot = document.getElementById("captcha-slot");
-    if (!slot || !isConfigured(HCAPTCHA_SITE_KEY)) return;
-
-    var box = document.createElement("div");
-    box.className = "h-captcha";
-    box.setAttribute("data-captcha", "true");
-    box.setAttribute("data-sitekey", HCAPTCHA_SITE_KEY);
-    slot.appendChild(box);
-
+  // reCAPTCHA v3 has no checkbox. It scores the visitor in the background
+  // and issues a token on demand, so there is nothing for a person to do.
+  function initRecaptcha() {
+    if (!isConfigured(RECAPTCHA_SITE_KEY)) return;
+    if (document.querySelector('script[src*="recaptcha/api.js"]')) return;
     var tag = document.createElement("script");
-    tag.src = "https://js.hcaptcha.com/1/api.js";
+    tag.src = "https://www.google.com/recaptcha/api.js?render=" + RECAPTCHA_SITE_KEY;
     tag.async = true;
-    tag.defer = true;
     document.head.appendChild(tag);
+  }
+
+  // Resolves to a fresh token, or "" if reCAPTCHA is unavailable.
+  function getRecaptchaToken() {
+    if (!isConfigured(RECAPTCHA_SITE_KEY) || typeof grecaptcha === "undefined") {
+      return Promise.resolve("");
+    }
+    return new Promise(function (resolve) {
+      grecaptcha.ready(function () {
+        grecaptcha
+          .execute(RECAPTCHA_SITE_KEY, { action: "contact" })
+          .then(resolve)
+          .catch(function () { resolve(""); });
+      });
+    });
   }
 
   function initContactForm() {
     var form = document.getElementById("contact-form");
     if (!form) return;
 
-    initHcaptcha();
+    initRecaptcha();
     var loadedAt = Date.now();
 
     form.addEventListener("submit", function (e) {
@@ -228,19 +240,12 @@
         return;
       }
 
-      var captchaToken = "";
-      if (isConfigured(HCAPTCHA_SITE_KEY)) {
-        var field = form.querySelector('[name="h-captcha-response"]');
-        captchaToken = field ? field.value : "";
-        if (!captchaToken) {
-          setStatus("Please complete the anti-spam check below before sending.", "status-error");
-          return;
-        }
-      }
-
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       setStatus("Sending your message \u2026");
+
+      // v3 issues the token asynchronously, so the send waits on it.
+      getRecaptchaToken().then(function (captchaToken) {
 
       var payload = {
         access_key: FORM_ACCESS_KEY,
@@ -251,7 +256,7 @@
         phone: data.phone || "-",
         message: data.message
       };
-      if (captchaToken) payload["h-captcha-response"] = captchaToken;
+      if (captchaToken) payload.recaptcha_response = captchaToken;
 
       fetch(FORM_ENDPOINT, {
         method: "POST",
@@ -262,7 +267,6 @@
         .then(function (result) {
           if (result && result.success) {
             form.reset();
-            if (window.hcaptcha) window.hcaptcha.reset();
             setStatus("Thank you. Your message has been sent \u2014 we will get back to you shortly.", "status-ok");
           } else {
             setStatus("Sorry, that did not go through. Please email us directly at " + CONTACT_EMAIL + ".", "status-error");
@@ -274,6 +278,8 @@
         .then(function () {
           if (button) button.disabled = false;
         });
+
+      });
     });
   }
 
