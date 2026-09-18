@@ -35,7 +35,7 @@
      behaved before, so the site keeps working.
      -------------------------------------------------------- */
 
-  var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
+  var FORM_ACCESS_KEY = "1e141031-8fe2-4562-bf92-ff5a123bdd92";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
