@@ -28,12 +28,14 @@
 
      The CAPTCHA is hCaptcha, verified server-side by the form service.
 
-     HCAPTCHA_SITE_KEY below is our own site key. Using our own pair
-     rather than the form service's shared one requires a paid plan there,
-     and the matching hCaptcha SECRET must be entered in that dashboard -
-     never in this file, which is served to visitors. On the free plan the
-     shared key "50b2fe65-b00b-4b9e-ad62-3ba471098be2" is the one that
-     works, since the service holds its secret.
+     HCAPTCHA_SITE_KEY below is the form service's own shared key, which
+     is what works on the free plan: they hold the matching secret, so
+     they can verify the token. Our own key would fail verification there.
+
+     To switch to our own pair - site key
+     1e141031-8fe2-4562-bf92-ff5a123bdd92 - the account must be on a paid
+     plan, with the matching hCaptcha SECRET entered in that dashboard.
+     The secret never belongs in this file, which is served to visitors.
 
      FORM_ACCESS_KEY comes from web3forms.com: enter the destination
      address there and the key is emailed to you. Until it is filled in,
@@ -42,7 +44,7 @@
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
-  var HCAPTCHA_SITE_KEY = "1e141031-8fe2-4562-bf92-ff5a123bdd92";
+  var HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
