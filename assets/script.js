@@ -25,9 +25,13 @@
      Submissions POST to a hosted form service, which filters spam and
      forwards the message by email.
 
-     There is no visible challenge on the form. Spam is filtered by the
-     hidden honeypot field and the submit-timing check below, plus
-     whatever filtering the form service applies on its side.
+     The visible challenge is hCaptcha, verified server-side by the form
+     service. HCAPTCHA_SITE_KEY below is the service's own shared key,
+     which is what works on the free plan: they hold the matching secret,
+     so they can verify the token. Our own hCaptcha pair, or Google
+     reCAPTCHA, would need a paid plan there.
+
+     Behind it sit the hidden honeypot field and the submit-timing check.
 
      FORM_ACCESS_KEY comes from web3forms.com: enter the destination
      address there and the key is emailed to you. Until it is filled in,
@@ -36,6 +40,7 @@
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "1e141031-8fe2-4562-bf92-ff5a123bdd92";
+  var HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
@@ -201,10 +206,33 @@
     });
   }
 
+  // hCaptcha draws a checkbox the visitor ticks; the widget writes its
+  // token into a hidden field that is posted with the form.
+  function initHcaptcha() {
+    // Without a backend there is nothing to verify the token, so show no
+    // challenge at all rather than a checkbox that gates nothing.
+    if (!isConfigured(FORM_ACCESS_KEY)) return;
+    var slot = document.getElementById("captcha-slot");
+    if (!slot || slot.children.length) return;
+
+    var box = document.createElement("div");
+    box.className = "h-captcha";
+    box.setAttribute("data-captcha", "true");
+    box.setAttribute("data-sitekey", HCAPTCHA_SITE_KEY);
+    slot.appendChild(box);
+
+    var tag = document.createElement("script");
+    tag.src = "https://js.hcaptcha.com/1/api.js";
+    tag.async = true;
+    tag.defer = true;
+    document.head.appendChild(tag);
+  }
+
   function initContactForm() {
     var form = document.getElementById("contact-form");
     if (!form) return;
 
+    initHcaptcha();
     var loadedAt = Date.now();
 
     form.addEventListener("submit", function (e) {
@@ -235,6 +263,15 @@
         return;
       }
 
+      // An unticked box is a validation problem, so it stays inline next
+      // to the form rather than opening the outcome dialog.
+      var captchaField = form.querySelector('[name="h-captcha-response"]');
+      var captchaToken = captchaField ? captchaField.value : "";
+      if (isConfigured(HCAPTCHA_SITE_KEY) && !captchaToken) {
+        setStatus("Please complete the anti-spam check below before sending.", "status-error");
+        return;
+      }
+
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       setStatus("Sending your message \u2026");
@@ -248,6 +285,7 @@
         phone: data.phone || "-",
         message: data.message
       };
+      if (captchaToken) payload["h-captcha-response"] = captchaToken;
 
       fetch(FORM_ENDPOINT, {
         method: "POST",
@@ -281,6 +319,7 @@
         })
         .then(function () {
           if (button) button.disabled = false;
+          if (window.hcaptcha) window.hcaptcha.reset();
         });
     });
   }

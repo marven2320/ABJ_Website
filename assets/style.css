@@ -474,6 +474,12 @@ img{ max-width: 100%; display: block; }
   overflow: hidden;
 }
 
+#captcha-slot:not(:empty){ margin: 16px 0; }
+
+/* the hCaptcha iframe has a fixed 303px width; let it shrink rather than
+   push the form sideways on small phones */
+#captcha-slot iframe{ max-width: 100%; }
+
 #contact-status.status-error{ color: var(--red); }
 #contact-status.status-ok{ color: #1f7a4d; }
 
