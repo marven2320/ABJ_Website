@@ -43,7 +43,6 @@
     return !!value && value.indexOf("PASTE_") !== 0;
   }
   var FORM_ENDPOINT = "https://api.web3forms.com/submit";
-  var CONTACT_EMAIL = "abnjworks@gmail.com";
 
   /* ---------------- View routing (Home / Services / About / Contact / FAQ) ---------------- */
 
@@ -135,10 +134,10 @@
   function setStatus(text, kind) {
     var status = document.getElementById("contact-status");
     if (!status) return;
-    status.textContent = text;
-    status.classList.add("show");
+    status.textContent = text || "";
     status.classList.remove("status-error", "status-ok");
-    if (kind) status.classList.add(kind);
+    status.classList.toggle("show", !!text);
+    if (text && kind) status.classList.add(kind);
   }
 
   function readForm() {
@@ -158,19 +157,45 @@
     return null;
   }
 
-  // Fallback used while no form service is configured: hand the message
-  // to the visitor's own email app, the original behaviour.
-  function sendByMailto(data, subjectText) {
-    var body =
-      "Name: " + data.name + "\n" +
-      "Email: " + data.email + "\n" +
-      "Phone: " + (data.phone || "-") + "\n\n" +
-      data.message;
-    setStatus("Opening your email app so you can send this message \u2026");
-    window.location.href =
-      "mailto:" + CONTACT_EMAIL +
-      "?subject=" + encodeURIComponent(subjectText) +
-      "&body=" + encodeURIComponent(body);
+  /* ---- Confirmation modal ---- */
+
+  var lastFocused = null;
+
+  function openSentModal() {
+    var modal = document.getElementById("sent-modal");
+    if (!modal) return;
+    lastFocused = document.activeElement;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    var closeBtn = modal.querySelector("button[data-close-modal]");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeSentModal() {
+    var modal = document.getElementById("sent-modal");
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocused && lastFocused.focus) lastFocused.focus();
+  }
+
+  function initSentModal() {
+    var modal = document.getElementById("sent-modal");
+    if (!modal) return;
+
+    modal.addEventListener("click", function (e) {
+      if (e.target.hasAttribute("data-close-modal")) closeSentModal();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (modal.hidden) return;
+      if (e.key === "Escape") closeSentModal();
+      // keep focus inside the dialog while it is open
+      if (e.key === "Tab") {
+        var btn = modal.querySelector("button[data-close-modal]");
+        if (btn) { e.preventDefault(); btn.focus(); }
+      }
+    });
   }
 
   function initContactForm() {
@@ -203,7 +228,7 @@
       var subjectText = SUBJECT_LABELS[data.subjectSlug] || "General Inquiry";
 
       if (!isConfigured(FORM_ACCESS_KEY)) {
-        sendByMailto(data, subjectText);
+        setStatus("The form is not accepting messages right now. Please try again later.", "status-error");
         return;
       }
 
@@ -230,7 +255,8 @@
         .then(function (result) {
           if (result && result.success) {
             form.reset();
-            setStatus("Thank you. Your message has been sent \u2014 we will get back to you shortly.", "status-ok");
+            setStatus("", "");
+            openSentModal();
           } else {
             setStatus("Sorry, that did not go through. Please try again in a moment.", "status-error");
           }
@@ -410,6 +436,7 @@
     initNavToggle();
     initQuoteButtons();
     initContactForm();
+    initSentModal();
     initCalculator();
   });
 })();
