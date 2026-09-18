@@ -26,11 +26,14 @@
      forwards the message by email, verifying the CAPTCHA as part of that
      step.
 
-     The CAPTCHA is hCaptcha, which the form service verifies server-side
-     using its own key pair - the site key below is theirs, published for
-     this purpose. There is no secret to hold, and no CAPTCHA account to
-     register. Nothing sensitive belongs in this file: everything here is
-     served to visitors.
+     The CAPTCHA is hCaptcha, verified server-side by the form service.
+
+     HCAPTCHA_SITE_KEY below is our own site key. Using our own pair
+     rather than the form service's shared one requires a paid plan there,
+     and the matching hCaptcha SECRET must be entered in that dashboard -
+     never in this file, which is served to visitors. On the free plan the
+     shared key "50b2fe65-b00b-4b9e-ad62-3ba471098be2" is the one that
+     works, since the service holds its secret.
 
      FORM_ACCESS_KEY comes from web3forms.com: enter the destination
      address there and the key is emailed to you. Until it is filled in,
@@ -39,7 +42,7 @@
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
-  var HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
+  var HCAPTCHA_SITE_KEY = "1e141031-8fe2-4562-bf92-ff5a123bdd92";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
