@@ -23,19 +23,11 @@
 
   /* ---------------- Contact form delivery ----------------
      Submissions POST to a hosted form service, which filters spam and
-     forwards the message by email, verifying the CAPTCHA as part of that
-     step.
+     forwards the message by email.
 
-     The CAPTCHA is hCaptcha, verified server-side by the form service.
-
-     HCAPTCHA_SITE_KEY below is the form service's own shared key, which
-     is what works on the free plan: they hold the matching secret, so
-     they can verify the token. Our own key would fail verification there.
-
-     To switch to our own pair - site key
-     1e141031-8fe2-4562-bf92-ff5a123bdd92 - the account must be on a paid
-     plan, with the matching hCaptcha SECRET entered in that dashboard.
-     The secret never belongs in this file, which is served to visitors.
+     There is no visible challenge on the form. Spam is filtered by the
+     hidden honeypot field and the submit-timing check below, plus
+     whatever filtering the form service applies on its side.
 
      FORM_ACCESS_KEY comes from web3forms.com: enter the destination
      address there and the key is emailed to you. Until it is filled in,
@@ -44,7 +36,6 @@
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
-  var HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
@@ -175,42 +166,17 @@
       "Email: " + data.email + "\n" +
       "Phone: " + (data.phone || "-") + "\n\n" +
       data.message;
-    setStatus("Opening your email app to send this to " + CONTACT_EMAIL + " \u2026");
+    setStatus("Opening your email app so you can send this message \u2026");
     window.location.href =
       "mailto:" + CONTACT_EMAIL +
       "?subject=" + encodeURIComponent(subjectText) +
       "&body=" + encodeURIComponent(body);
   }
 
-  // hCaptcha renders a checkbox the visitor ticks. The widget writes its
-  // token into a hidden field, which is posted with the form and verified
-  // server-side by the form service.
-  function initHcaptcha() {
-    // Without a backend the token has nothing to verify it, and the form
-    // falls back to the email app - so show no challenge at all until the
-    // access key is in place, rather than a checkbox that gates nothing.
-    if (!isConfigured(FORM_ACCESS_KEY)) return;
-    var slot = document.getElementById("captcha-slot");
-    if (!slot || slot.children.length) return;
-
-    var box = document.createElement("div");
-    box.className = "h-captcha";
-    box.setAttribute("data-captcha", "true");
-    box.setAttribute("data-sitekey", HCAPTCHA_SITE_KEY);
-    slot.appendChild(box);
-
-    var tag = document.createElement("script");
-    tag.src = "https://js.hcaptcha.com/1/api.js";
-    tag.async = true;
-    tag.defer = true;
-    document.head.appendChild(tag);
-  }
-
   function initContactForm() {
     var form = document.getElementById("contact-form");
     if (!form) return;
 
-    initHcaptcha();
     var loadedAt = Date.now();
 
     form.addEventListener("submit", function (e) {
@@ -241,13 +207,6 @@
         return;
       }
 
-      var captchaField = form.querySelector('[name="h-captcha-response"]');
-      var captchaToken = captchaField ? captchaField.value : "";
-      if (!captchaToken) {
-        setStatus("Please complete the anti-spam check below before sending.", "status-error");
-        return;
-      }
-
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       setStatus("Sending your message \u2026");
@@ -261,7 +220,6 @@
         phone: data.phone || "-",
         message: data.message
       };
-      payload["h-captcha-response"] = captchaToken;
 
       fetch(FORM_ENDPOINT, {
         method: "POST",
@@ -274,15 +232,14 @@
             form.reset();
             setStatus("Thank you. Your message has been sent \u2014 we will get back to you shortly.", "status-ok");
           } else {
-            setStatus("Sorry, that did not go through. Please email us directly at " + CONTACT_EMAIL + ".", "status-error");
+            setStatus("Sorry, that did not go through. Please try again in a moment.", "status-error");
           }
         })
         .catch(function () {
-          setStatus("Sorry, that did not go through. Please email us directly at " + CONTACT_EMAIL + ".", "status-error");
+          setStatus("Sorry, that did not go through. Please try again in a moment.", "status-error");
         })
         .then(function () {
           if (button) button.disabled = false;
-          if (window.hcaptcha) window.hcaptcha.reset();
         });
     });
   }
