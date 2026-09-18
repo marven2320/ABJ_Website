@@ -161,9 +161,12 @@
 
   var lastFocused = null;
 
-  function openSentModal() {
+  function openSentModal(title, text, isError) {
     var modal = document.getElementById("sent-modal");
     if (!modal) return;
+    modal.querySelector("#sent-modal-title").textContent = title;
+    modal.querySelector("#sent-modal-text").textContent = text;
+    modal.classList.toggle("is-error", !!isError);
     lastFocused = document.activeElement;
     modal.hidden = false;
     document.body.style.overflow = "hidden";
@@ -256,13 +259,25 @@
           if (result && result.success) {
             form.reset();
             setStatus("", "");
-            openSentModal();
+            openSentModal(
+              "Thank you for your inquiry",
+              "We have received your message and will get back to you as soon as possible.",
+              false
+            );
           } else {
-            setStatus("Sorry, that did not go through. Please try again in a moment.", "status-error");
+            openSentModal(
+              "Your message was not sent",
+              "Something went wrong on the way. Please try again in a moment.",
+              true
+            );
           }
         })
         .catch(function () {
-          setStatus("Sorry, that did not go through. Please try again in a moment.", "status-error");
+          openSentModal(
+            "Your message was not sent",
+            "We could not reach the server. Please check your connection and try again.",
+            true
+          );
         })
         .then(function () {
           if (button) button.disabled = false;
