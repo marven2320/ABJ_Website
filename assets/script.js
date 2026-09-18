@@ -23,16 +23,14 @@
 
   /* ---------------- Contact form delivery ----------------
      Submissions POST to a hosted form service, which filters spam and
-     forwards the message by email, verifying the reCAPTCHA token as part
-     of that step.
+     forwards the message by email, verifying the CAPTCHA as part of that
+     step.
 
-     RECAPTCHA_SITE_KEY below is the public half of the key pair; it is
-     meant to be readable in page source and is safe to keep here.
-
-     The reCAPTCHA SECRET key must never appear in this file or anywhere
-     else in this repository - everything here is served to visitors. It
-     belongs in the Web3Forms dashboard, which is what performs the
-     server-side verification against Google.
+     The CAPTCHA is hCaptcha, which the form service verifies server-side
+     using its own key pair - the site key below is theirs, published for
+     this purpose. There is no secret to hold, and no CAPTCHA account to
+     register. Nothing sensitive belongs in this file: everything here is
+     served to visitors.
 
      FORM_ACCESS_KEY comes from web3forms.com: enter the destination
      address there and the key is emailed to you. Until it is filled in,
@@ -41,7 +39,7 @@
      -------------------------------------------------------- */
 
   var FORM_ACCESS_KEY = "PASTE_WEB3FORMS_ACCESS_KEY_HERE";
-  var RECAPTCHA_SITE_KEY = "6LdplMEtAAAAAEidoEai9SEop7wdP6qNPoF6S3uk";
+  var HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
 
   // A placeholder is still a truthy string, so check for it explicitly -
   // otherwise the form would POST an invalid key instead of falling back.
@@ -179,37 +177,35 @@
       "&body=" + encodeURIComponent(body);
   }
 
-  // reCAPTCHA v3 has no checkbox. It scores the visitor in the background
-  // and issues a token on demand, so there is nothing for a person to do.
-  function initRecaptcha() {
-    if (!isConfigured(RECAPTCHA_SITE_KEY)) return;
-    if (document.querySelector('script[src*="recaptcha/api.js"]')) return;
-    var tag = document.createElement("script");
-    tag.src = "https://www.google.com/recaptcha/api.js?render=" + RECAPTCHA_SITE_KEY;
-    tag.async = true;
-    document.head.appendChild(tag);
-  }
+  // hCaptcha renders a checkbox the visitor ticks. The widget writes its
+  // token into a hidden field, which is posted with the form and verified
+  // server-side by the form service.
+  function initHcaptcha() {
+    // Without a backend the token has nothing to verify it, and the form
+    // falls back to the email app - so show no challenge at all until the
+    // access key is in place, rather than a checkbox that gates nothing.
+    if (!isConfigured(FORM_ACCESS_KEY)) return;
+    var slot = document.getElementById("captcha-slot");
+    if (!slot || slot.children.length) return;
 
-  // Resolves to a fresh token, or "" if reCAPTCHA is unavailable.
-  function getRecaptchaToken() {
-    if (!isConfigured(RECAPTCHA_SITE_KEY) || typeof grecaptcha === "undefined") {
-      return Promise.resolve("");
-    }
-    return new Promise(function (resolve) {
-      grecaptcha.ready(function () {
-        grecaptcha
-          .execute(RECAPTCHA_SITE_KEY, { action: "contact" })
-          .then(resolve)
-          .catch(function () { resolve(""); });
-      });
-    });
+    var box = document.createElement("div");
+    box.className = "h-captcha";
+    box.setAttribute("data-captcha", "true");
+    box.setAttribute("data-sitekey", HCAPTCHA_SITE_KEY);
+    slot.appendChild(box);
+
+    var tag = document.createElement("script");
+    tag.src = "https://js.hcaptcha.com/1/api.js";
+    tag.async = true;
+    tag.defer = true;
+    document.head.appendChild(tag);
   }
 
   function initContactForm() {
     var form = document.getElementById("contact-form");
     if (!form) return;
 
-    initRecaptcha();
+    initHcaptcha();
     var loadedAt = Date.now();
 
     form.addEventListener("submit", function (e) {
@@ -240,12 +236,16 @@
         return;
       }
 
+      var captchaField = form.querySelector('[name="h-captcha-response"]');
+      var captchaToken = captchaField ? captchaField.value : "";
+      if (!captchaToken) {
+        setStatus("Please complete the anti-spam check below before sending.", "status-error");
+        return;
+      }
+
       var button = form.querySelector('button[type="submit"]');
       if (button) button.disabled = true;
       setStatus("Sending your message \u2026");
-
-      // v3 issues the token asynchronously, so the send waits on it.
-      getRecaptchaToken().then(function (captchaToken) {
 
       var payload = {
         access_key: FORM_ACCESS_KEY,
@@ -256,7 +256,7 @@
         phone: data.phone || "-",
         message: data.message
       };
-      if (captchaToken) payload.recaptcha_response = captchaToken;
+      payload["h-captcha-response"] = captchaToken;
 
       fetch(FORM_ENDPOINT, {
         method: "POST",
@@ -277,9 +277,8 @@
         })
         .then(function () {
           if (button) button.disabled = false;
+          if (window.hcaptcha) window.hcaptcha.reset();
         });
-
-      });
     });
   }
 
